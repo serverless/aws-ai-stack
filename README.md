@@ -122,7 +122,7 @@ with the service name.
 serverless auth deploy
 ```
 
-## 4. Prepare for production
+## 4. Prepare & release to prod
 
 Now that the app is up and running in a development environment, lets get it
 ready for production by setting up a custom domain name, and setting a new
@@ -168,7 +168,7 @@ to host the static website. The wildcard domain name,
 - Update the `stages.default.customDomainCertificateARN` to the ARN of the
   certificate you created in ACM.
 
-### Create the secret for JWT Token authentication
+### Create the secret for JWT token authentication
 
 Authentication is implemented using JWT tokens. A shared secret is used to sign
 the JWT tokens when a user logs in. The secret is also used to verify the JWT
@@ -190,7 +190,7 @@ with a key like `/awsaistack/shared-token`, and set it in the
 sharedTokenSecret: ${ssm:/awsaistack/shared-token}
 ```
 
-## 4. Deploy to prod
+### Deploy to prod
 
 Once you've setup the custom domain name (optional), and created the secret, you
 are ready to deploy the service to prod.
