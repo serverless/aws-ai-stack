@@ -3,13 +3,7 @@
   "version": "1.0.0",
   "description": "Lambda AI Boilerplate (LAB) for Serverless Framework V.4",
   "private": true,
-  "scripts": {
-    "install": "npm run install:ai-chat-api && npm run install:auth && npm run install:business-api && npm run install:business-worker && npm run install:website && npm run install:website-app",
-    "install:ai-chat-api": "cd ai-chat-api && npm install",
-    "install:auth": "cd auth && npm install",
-    "install:business-api": "cd business-api && npm install",
-    "install:business-worker": "cd business-worker && npm install",
-    "install:website": "cd website && npm install",
-    "install:website-app": "cd website/app && npm install"
-  }
+  "workspaces": [
+    "**"
+  ]
 }
