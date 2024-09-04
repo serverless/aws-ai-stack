@@ -1,0 +1,21 @@
+service: business-worker
+
+provider:
+  name: aws
+  runtime: nodejs20.x
+
+build:
+  esbuild: true
+
+# This creates a simple lambda function that listens to the event bus for the
+# auth.register event. The event bus ARN is passed as a parameter to the
+# service, which originates from the event-bus service as an output parameter.
+functions:
+  worker:
+    handler: handler.handler
+    events:
+      - eventBridge:
+          eventBus: ${param:eventBusArn}
+          pattern:
+            source:
+              - auth.register

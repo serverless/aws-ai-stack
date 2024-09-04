@@ -1,0 +1,158 @@
+service: ai-chat-api
+
+stages:
+  default:
+    params:
+      modelId: meta.llama3-70b-instruct-v1:0
+      customDomainNameChatApi: chat.${param:customDomainName}
+      dynamoDbUsageTableName: ${self:service}-usage-table-${sls:stage}
+      throttleMonthlyLimitUser: 10
+      throttleMonthlyLimitGlobal: 100
+
+provider:
+  name: aws
+  runtime: nodejs20.x
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            # This permission is required for ConverseStreamCommand
+            - bedrock:InvokeModelWithResponseStream
+          Resource:
+            - arn:aws:bedrock:${aws:region}::foundation-model/${param:modelId}
+        - Effect: Allow
+          Action:
+            - dynamodb:Query
+            - dynamodb:Scan
+            - dynamodb:GetItem
+            - dynamodb:PutItem
+            - dynamodb:UpdateItem
+            - dynamodb:DeleteItem
+          Resource:
+            - Fn::GetAtt:
+                - DynamoDbUsageTable
+                - Arn
+build:
+  esbuild:
+    # By default the @aws-sdk/* packages are marked as external because they are
+    # included in the Lambda runtime; however, the lambda runtime packages are
+    # behind the latest release. At the time of writing, the lambda runtime did
+    # not include the @aws-sdk/bedrock-runtime-client. By setting the external
+    # and exclude options to [], we instruct ESBuild to include these packages
+    # in the bundle.
+    exclude:
+      - "@aws-sdk/*"
+      - "!@aws-sdk/client-bedrock-runtime"
+
+functions:
+  api:
+    handler: handler.handler
+    timeout: 60
+    url:
+      invokeMode: RESPONSE_STREAM
+      cors: true
+    environment:
+      MODEL_ID: ${param:modelId}
+      SHARED_TOKEN_SECRET: ${param:sharedTokenSecret}
+      USAGE_TABLE_NAME: ${param:dynamoDbUsageTableName}
+      THROTTLE_MONTHLY_LIMIT_USER: ${param:throttleMonthlyLimitUser}
+      THROTTLE_MONTHLY_LIMIT_GLOBAL: ${param:throttleMonthlyLimitGlobal}
+
+resources:
+  # This condition is used to determine whether the custom domain name is
+  # enabled. The CloudFront distribution and Route 53 record set group are
+  # only created if the custom domain name is enabled. Otherwise the default
+  # Lambda function URL is used.
+  Conditions:
+    CustomDomainNameEnabled:
+      Fn::Equals:
+        - ${param:customDomainNameEnabled}
+        - true
+  Resources:
+    DynamoDbUsageTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        AttributeDefinitions:
+          - AttributeName: PK
+            AttributeType: S
+          - AttributeName: SK
+            AttributeType: S
+        KeySchema:
+          - AttributeName: PK
+            KeyType: HASH
+          - AttributeName: SK
+            KeyType: RANGE
+        BillingMode: PAY_PER_REQUEST
+        TableName: ${param:dynamoDbUsageTableName}
+    ApiCloudFrontDistribution:
+      Type: AWS::CloudFront::Distribution
+      Condition: CustomDomainNameEnabled
+      DeletionPolicy: Delete
+      Properties:
+        DistributionConfig:
+          Enabled: true
+          PriceClass: PriceClass_100
+          HttpVersion: http2
+          Comment: Distribution to support the custom domain name ${param:customDomainNameChatApi} for the AI Chat API Service
+          Origins:
+            - Id: ChatAPILambdaFunction
+              DomainName:
+                !Select [
+                  2,
+                  !Split ["/", !GetAtt ApiLambdaFunctionUrl.FunctionUrl],
+                ]
+              OriginPath: ""
+              CustomOriginConfig:
+                HTTPPort: 80
+                HTTPSPort: 443
+                OriginProtocolPolicy: https-only
+                OriginSSLProtocols: [TLSv1, TLSv1.1, TLSv1.2]
+          DefaultCacheBehavior:
+            TargetOriginId: ChatAPILambdaFunction
+            ViewerProtocolPolicy: redirect-to-https
+            Compress: true
+            AllowedMethods:
+              - HEAD
+              - DELETE
+              - POST
+              - GET
+              - OPTIONS
+              - PUT
+              - PATCH
+            ForwardedValues:
+              QueryString: true
+              Headers:
+                - Authorization
+              Cookies:
+                Forward: all
+          Aliases:
+            - ${param:customDomainNameChatApi}
+          ViewerCertificate:
+            SslSupportMethod: sni-only
+            MinimumProtocolVersion: TLSv1.2_2021
+            AcmCertificateArn: ${param:customDomainCertificateARN}
+    ApiRecordSetGroup:
+      Type: AWS::Route53::RecordSetGroup
+      DeletionPolicy: Delete
+      Condition: CustomDomainNameEnabled
+      DependsOn:
+        - ApiCloudFrontDistribution
+      Properties:
+        HostedZoneName: ${param:customDomainName}.
+        RecordSets:
+          - Name: ${param:customDomainNameChatApi}
+            Type: A
+            AliasTarget:
+              HostedZoneId: Z2FDTNDATAQYW2 # Cloudfront default hosted zone ID
+              DNSName: { "Fn::GetAtt": [ApiCloudFrontDistribution, DomainName] }
+              Outputs:
+  Outputs:
+    # This exports the URL of the endpoint with the custom domain name, if it is
+    # available, otherwise it provides the default Lambda function URL.
+    ChatApiUrl:
+      Value:
+        Fn::If:
+          - CustomDomainNameEnabled
+          - !Sub "https://${param:customDomainNameChatApi}"
+          - !GetAtt ApiLambdaFunctionUrl.FunctionUrl

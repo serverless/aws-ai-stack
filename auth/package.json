@@ -1,0 +1,20 @@
+{
+  "name": "auth-api",
+  "version": "1.0.0",
+  "description": "",
+  "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.637.0",
+    "@aws-sdk/client-eventbridge": "^3.637.0",
+    "@aws-sdk/lib-dynamodb": "^3.637.0",
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.5",
+    "express": "^4.19.2",
+    "jsonwebtoken": "^9.0.2",
+    "serverless-http": "^3.2.0",
+    "uuid": "^10.0.0",
+    "auth-sdk": "file:./sdk"
+  },
+  "devDependencies": {
+    "serverless-domain-manager": "^7.4.0"
+  }
+}

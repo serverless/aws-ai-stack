@@ -1,0 +1,106 @@
+service: auth
+
+stages:
+  default:
+    params:
+      customDomainNameAuthAPI: api.${param:customDomainName}
+      dynamoDbUserTableName: user-table-${sls:stage}
+
+build:
+  esbuild: true
+
+provider:
+  name: aws
+  runtime: nodejs20.x
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - dynamodb:Query
+            - dynamodb:Scan
+            - dynamodb:GetItem
+            - dynamodb:PutItem
+            - dynamodb:UpdateItem
+            - dynamodb:DeleteItem
+          Resource:
+            - Fn::GetAtt:
+                - DynamoDbUserTable
+                - Arn
+            - Fn::Sub: "${DynamoDbUserTable.Arn}/index/emailIndex"
+        - Effect: Allow
+          Action:
+            - events:PutEvents
+          Resource:
+            - ${param:eventBusArn}
+  environment:
+    USERS_TABLE_NAME: ${param:dynamoDbUserTableName}
+    EVENT_BUS_NAME: ${param:eventBusName}
+    PREFIX_PATH: /${self:service}
+    SHARED_TOKEN_SECRET: ${param:sharedTokenSecret}
+
+plugins:
+  - serverless-domain-manager
+
+custom:
+  customDomain:
+    domainName: api.${param:customDomainName}
+    certificateArn: ${param:customDomainCertificateARN}
+    stage: ""
+    endpointType: regional
+    apiType: http
+    autoDomain: true
+    enabled: ${param:customDomainNameEnabled}
+    basePath: ${self:service}
+
+functions:
+  api:
+    handler: src/handler.handler
+    events:
+      - httpApi:
+          path: /{proxy+}
+          method: any
+
+# Serverless Framework doesn't support creating DynamoDB tables natively.
+# Instead, we can use the AWS CloudFormation syntax to create the table.
+resources:
+  Conditions:
+    CustomDomainNameEnabled:
+      Fn::Equals:
+        - ${param:customDomainNameEnabled}
+        - true
+  Resources:
+    DynamoDbUserTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        AttributeDefinitions:
+          - AttributeName: userId
+            AttributeType: S
+          - AttributeName: email
+            AttributeType: S
+        KeySchema:
+          - AttributeName: userId
+            KeyType: HASH
+        BillingMode: PAY_PER_REQUEST
+        TableName: ${param:dynamoDbUserTableName}
+        GlobalSecondaryIndexes:
+          - IndexName: emailIndex
+            KeySchema:
+              - AttributeName: email
+                KeyType: HASH
+            Projection:
+              ProjectionType: ALL
+
+  Outputs:
+    UserTableArn:
+      Description: The ARN of the Users DynamoDB table
+      Value:
+        Fn::GetAtt:
+          - DynamoDbUserTable
+          - Arn
+    AuthApiUrl:
+      Value:
+        Fn::If:
+          - CustomDomainNameEnabled
+          - !Sub "https://${param:customDomainNameAuthAPI}/${self:service}"
+          - !GetAtt HttpApi.ApiEndpoint

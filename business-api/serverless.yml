@@ -1,0 +1,51 @@
+service: business
+
+provider:
+  name: aws
+  runtime: nodejs20.x
+  environment:
+    SHARED_TOKEN_SECRET: ${param:sharedTokenSecret}
+
+plugins:
+  - serverless-domain-manager
+
+stages:
+  default:
+    params:
+      customDomainNameAuthAPI: api.${param:customDomainName}
+
+build:
+  esbuild: true
+
+custom:
+  customDomain:
+    domainName: ${param:customDomainNameAuthAPI}
+    certificateArn: ${param:customDomainCertificateARN}
+    stage: ""
+    endpointType: regional
+    apiType: http
+    autoDomain: true
+    enabled: ${param:customDomainNameEnabled}
+    basePath: ${self:service}
+
+functions:
+  api:
+    handler: handler.handler
+    events:
+      - httpApi:
+          path: /{proxy+}
+          method: any
+
+resources:
+  Conditions:
+    CustomDomainNameEnabled:
+      Fn::Equals:
+        - ${param:customDomainNameEnabled}
+        - true
+  Outputs:
+    BusinessApiUrl:
+      Value:
+        Fn::If:
+          - CustomDomainNameEnabled
+          - !Sub "https://${param:customDomainNameAuthAPI}/${self:service}"
+          - !GetAtt HttpApi.ApiEndpoint

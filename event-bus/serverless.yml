@@ -1,0 +1,30 @@
+service: event-bus
+
+provider:
+  name: aws
+  runtime: nodejs20.x
+
+params:
+  default:
+    eventBusName: ${self:service}-${sls:stage}
+
+# The "resource" block is used to define CloudFormation resources. In this case
+# it creates an EventBridge Event Bus using the defined in params.default.eventBusName.
+resources:
+  Resources:
+    EventBus:
+      Type: "AWS::Events::EventBus"
+      Properties:
+        Name: ${param:eventBusName}
+  # The "output" block is used to define the output of the Event Bus ARN and
+  # name. This is used as input parameters by other services.
+  Outputs:
+    EventBusArn:
+      Description: The ARN of the EventBridge Event Bus
+      Value:
+        Fn::GetAtt:
+          - EventBus
+          - Arn
+    EventBusName:
+      Description: The name of the EventBridge Event Bus
+      Value: ${param:eventBusName}

@@ -1,0 +1,13 @@
+{
+  "name": "api-ai-chat",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "dependencies": {
+    "@aws-sdk/client-bedrock-runtime": "^3.642.0",
+    "@aws-sdk/client-dynamodb": "^3.637.0",
+    "@aws-sdk/lib-dynamodb": "^3.637.0",
+    "auth-sdk": "file:../auth/sdk",
+    "zod": "^3.23.8"
+  }
+}

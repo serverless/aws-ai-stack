@@ -1,0 +1,48 @@
+stages:
+  default:
+    params:
+      # This is used as the shared secret for generating JWT tokens. For non
+      # production stages, the default value is used. In production, the value
+      # should be set in SSM.
+      sharedTokenSecret: DEFAULT
+      # The customDomainName enables support for custom domain names. As long as
+      # this value is false, the subsequent parameters are ignored. However,
+      # they are referenced in the serverless.yml files of the services,
+      # therefore we define defaults such that the variables can be resolved.
+      customDomainNameEnabled: false
+      customDomainName: NA
+      customDomainCertificateARN: NA
+  prod:
+    params:
+      # In production the sharedTokenSecret should be set in SSM, but if it isn
+      # the fallback value is used.
+      sharedTokenSecret: ${ssm:/YOUR_AWS_SHARED_SECRET, "DEFAULT"}
+      # In production, the custom domain name is enabled, and therefore the
+      # customDomainCertificateARN value must be set. The README providers
+      # more details on setting up the Certificate.
+      customDomainNameEnabled: true
+      customDomainName: YOUR_DOMAIN_NAME
+      customDomainCertificateARN: YOUR_CERTIFICATE_ARN
+
+services:
+  eventBus:
+    path: ./event-bus
+  auth:
+    path: ./auth
+    params:
+      eventBusArn: ${eventBus.EventBusArn}
+      eventBusName: ${eventBus.EventBusName}
+  aiChatApi:
+    path: ./ai-chat-api
+  web:
+    path: ./website
+    params:
+      chatApiUrl: ${aiChatApi.ChatApiUrl}
+      authApiUrl: ${auth.AuthApiUrl}
+  businessApi:
+    path: ./business-api
+  businessWorker:
+    path: ./business-worker
+    params:
+      eventBusArn: ${eventBus.EventBusArn}
+      eventBusName: ${eventBus.EventBusName}

@@ -1,0 +1,14 @@
+{
+  "name": "api",
+  "version": "1.0.0",
+  "description": "",
+  "devDependencies": {
+    "serverless-domain-manager": "^7.4.0"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.19.2",
+    "serverless-http": "^3.2.0",
+    "auth-sdk": "file:../auth/sdk"
+  }
+}
