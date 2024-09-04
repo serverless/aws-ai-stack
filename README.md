@@ -44,7 +44,7 @@ Highlights of this project include:
 
 # Getting Started
 
-## 1. Install dependencies & deploy
+## 1. Install dependencies
 
 **Install Serverless Framework**
 
@@ -54,11 +54,37 @@ npm i -g serverless
 
 **Install NPM dependencies**
 
-This runs `npm install` in each service directory.
+This project is structured as a monorepo with multiple services. Each service
+has its own `package.json` file, so you must install the dependencies for each
+service. Running `npm install` in the root directory will install the
+dependencies for all services.
 
 ```
 npm install
 ```
+
+**Setup AWS Credentials**
+
+If you haven't already, setup your AWS Credentials. You can follow the [AWS Credentials doc](https://www.serverless.com/framework/docs/providers/aws/guide/credentials)
+for step-by-step instructions.
+
+## 2. Enable AWS Bedrock Models
+
+This example requires the `meta.llama3-70b-instruct-v1:0` AWS Bedrock
+Model to be enabled. By default, AWS does not enable these models, you must go
+to the [AWS Console](https://us-east-1.console.aws.amazon.com/bedrock/home?region=us-east-1#/models)
+and individually request access to the AI Models.
+
+There is no cost to enable the models, but you must request access to use them.
+
+Upon request, it may take a few minutes for AWS to enable the model. Once they
+are enabled, you will receive an email from AWS confirming the model is enabled.
+
+## 3. Deploy & start developing
+
+Now you are ready to deploy the services. This will deploy all the services
+to your AWS account. You can deploy the services to the `default` stage, which
+is the default stage for development.
 
 **Deploy the services**
 
@@ -66,19 +92,43 @@ npm install
 serverless deploy
 ```
 
-**NOTE**: This example requires the `meta.llama3-70b-instruct-v1:0` AWS Bedrock
-Model to be enabled. By default, AWS does not enable these models, you must go
-to the [AWS Console](https://us-east-1.console.aws.amazon.com/bedrock/home?region=us-east-1#/models)
-and individually request access to the AI Models.
+At this point the service is live. When running the `serverless deploy` command,
+you will see the output of the services that were deployed. One of those
+services is the `web` service, which is the website service. To view the app,
+go to the URL in the `endpoint: ANY - ` section for the `web` service.
 
-At this point you will have a functional dev service deploy. This `dev` stage
-does not use a custom domain name, and uses a placeholder shared secret for JWT
-token authentication.
+```
+Deploying "web" to stage "dev" (us-east-1)
 
-The subsequent steps will help you setup the custom domain name, shared secret,
-and development workflow you can use in production.
+endpoint: ANY - https://ps5s7dd634.execute-api.us-east-1.amazonaws.com
+functions:
+  app: web-dev-app (991 kB)
 
-## 2. Setup Custom Domain Name (optional)
+```
+
+Once you start developing it is easier to run the service locally for faster
+iteration. We recommend using [Serverless Dev Mode](https://www.serverless.com/framework/docs/providers/aws/cli-reference/dev).
+You can run Dev Mode for individual services. This emulates Lambda locally and
+proxies requests to the real service.
+
+```
+serverless auth dev
+```
+
+Once done, you can redeploy individual services using the `serverless` command
+with the service name.
+
+```
+serverless auth deploy
+```
+
+## 4. Prepare for production
+
+Now that the app is up and running in a development environment, lets get it
+ready for production by setting up a custom domain name, and setting a new
+shared secret for JWT token authentication.
+
+### Setup Custom Domain Name (optional)
 
 This project is configured to use custom domain names. For non `prod`
 deployments this is disabled. Deployments to `prod` are designed to use a custom
@@ -103,14 +153,14 @@ https://us-east-1.console.aws.amazon.com/acm/home?region=us-east-1#/certificates
 This example uses a Certificate with the following full qualified domain names:
 
 ```
-serverless-fullstack.com
-*.serverless-fullstack.com
+awsaistack.com
+*.awsaistack.com
 ```
 
-The base domain name, `serverless-fullstack.com` is used for the website service
+The base domain name, `awsaistack.com` is used for the website service
 to host the static website. The wildcard domain name,
-`*.serverless-fullstack.com` is used for the API services,
-`api.serverless-fullstack.com`, and `chat.serverless-fullstack.com`.
+`*.awsaistack.com` is used for the API services,
+`api.awsaistack.com`, and `chat.awsaistack.com`.
 
 **Update serverless-compose.yml**
 
@@ -118,7 +168,7 @@ to host the static website. The wildcard domain name,
 - Update the `stages.default.customDomainCertificateARN` to the ARN of the
   certificate you created in ACM.
 
-## 3. Create the secret for JWT Token authentication
+### Create the secret for JWT Token authentication
 
 Authentication is implemented using JWT tokens. A shared secret is used to sign
 the JWT tokens when a user logs in. The secret is also used to verify the JWT
@@ -133,11 +183,11 @@ The `prod` stage uses the `${ssm}` parameter to retrieve the secret from AWS
 Systems Manager Parameter Store.
 
 Generate a random secret and store it in the AWS Systems Manager Parameter Store
-with a key like `/serverless-fullstack/shared-token`, and set it in the
+with a key like `/awsaistack/shared-token`, and set it in the
 `sharedTokenSecret` parameter in the `serverless-compose.yml` file:
 
 ```
-sharedTokenSecret: ${ssm:/serverless-fullstack/shared-token}
+sharedTokenSecret: ${ssm:/awsaistack/shared-token}
 ```
 
 ## 4. Deploy to prod
@@ -150,26 +200,8 @@ serverless deploy --stage prod
 ```
 
 Now you can use the service by visiting your domain name, or
-https://servelress-fullstack.com. This uses the Auth service to login and
+https://awsaistack.com. This uses the Auth service to login and
 register users, the AI Chat service to interact with the AI Chat bot.
-
-## 5. Start Developing
-
-Once you start developing it is easier to run the service locally for faster
-iteration. We recommend using Serverless Dev Mode. You can run Dev Mode for
-individual services. This emulates Lambda locally and proxies requests to the
-real service.
-
-```
-serverless auth dev
-```
-
-Once done, you can redeploy individual services using the `serverless` command
-with the service name.
-
-```
-serverless auth deploy
-```
 
 # Architectural Overview
 
@@ -213,7 +245,7 @@ services to validate the JWT token. This library is defined as an NPM package
 and is used by the `ai-chat-api` and `business-api` services and included using
 relative paths in the `package.json` file.
 
-## Authentication (api.serverless-fullstack.com/auth)
+## Authentication (api.awsaistack.com/auth)
 
 The `auth` service is an Express.js-based API service that provides login and
 registration endpoints. It uses a DynamoDB table to store user information and
@@ -232,7 +264,7 @@ authorizer.
 The `auth` service also publishes the CloudFormation Output `AuthApiUrl`, which
 is used by the website service to make requests to the `auth` service.
 
-## AI Chat (chat.serverless-fullstack.com)
+## AI Chat (chat.awsaistack.com)
 
 In most cases APIs on AWS Lambda use the API Gateway to expose the API. However,
 the `ai-chat-api` service uses Lambda Function URLs instead of API Gateway, in
@@ -274,7 +306,7 @@ stages:
       throttleMonthlyLimitGlobal: 100
 ```
 
-## Website (serverless-fullstack.com)
+## Website (awsaistack.com)
 
 The website service is a simple Lambda function which uses Express to serve
 static assets. The service uses the `serverless-plugin-scripts` plugin to
@@ -287,7 +319,7 @@ The frontend website is built using React. It uses the `auth` service to
 login and register uses, and uses the `ai-chat-api` to interact with the
 AI Chat bot API.
 
-## Business API (api.serverless-fullstack.com/business)
+## Business API (api.awsaistack.com/business)
 
 This is an Express.js-based API service that provides a placeholder for your
 business logic. It is configured to use the same custom domain name as the
@@ -329,7 +361,7 @@ Below are a few simple API requests using the `curl` command.
 ## User Registration API
 
 ```
-curl -X POST https://api.serverless-fullstack.com/auth/register \
+curl -X POST https://api.awsaistack.com/auth/register \
   -H 'Content-Type: application/json' \
   -d '{"email": "me@example.com", "password": "password"}'
 ```
@@ -337,7 +369,7 @@ curl -X POST https://api.serverless-fullstack.com/auth/register \
 ## User Login API
 
 ```
-curl -X POST https://api.serverless-fullstack.com/auth/login \
+curl -X POST https://api.awsaistack.com/auth/login \
   -H 'Content-Type: application/json' \
   -d '{"email": "me@example.com", "password": "password"}'
 ```
@@ -347,7 +379,7 @@ the token as an environment variable so you can use the token in subsequent
 requests.
 
 ```
-export SERVERLESS_EXAMPLE_TOKEN=$(curl -X POST https://api.serverless-fullstack.com/auth/login \
+export SERVERLESS_EXAMPLE_TOKEN=$(curl -X POST https://api.awsaistack.com/auth/login \
   -H 'Content-Type: application/json' \
   -d '{"email": "me@example.com", "password": "password"}' \
 | jq -r '.token')
@@ -362,7 +394,7 @@ may also contain multiple JSON objects.
 This endpoint is authenticated and requires the JWT token from the login API.
 
 ```
-curl -N -X POST https://chat.serverless-fullstack.com/ \
+curl -N -X POST https://chat.awsaistack.com/ \
   -H 'Content-Type: application/json' \
   -H "Authorization: Bearer $SERVERLESS_EXAMPLE_TOKEN" \
   -d '[{"role":"user","content":[{"text":"What makes the serverless framework so great?"}]}]'
@@ -374,7 +406,7 @@ This endpoint is also authenticated and requires the JWT token from the login
 API. The response is a simple message.
 
 ```
-curl -X GET https://api.serverless-fullstack.com/business/ \
+curl -X GET https://api.awsaistack.com/business/ \
   -H 'Content-Type: application/json' \
   -H "Authorization: Bearer $SERVERLESS_EXAMPLE_TOKEN"
 ```
@@ -398,7 +430,7 @@ to use the same domain name as the other services.
 ## Using API Gateway to share a custom domain name
 
 In this configuration, the Auth and Business APIs use the paths `/auth` and
-`/business` respectively on `api.serverless-fullstack.com`. The Custom Domain
+`/business` respectively on `api.awsaistack.com`. The Custom Domain
 Name Path Mapping was used in the Custom Domain Name support in API Gateway
 to use the same domain name but shared across multiple API Gateway instances.
 
