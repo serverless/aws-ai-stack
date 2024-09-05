@@ -4,6 +4,8 @@ _The AWS AI Stack is a robust Serverless Compose & Framework scaffolding project
 you can deploy immediately, pay only for what you use, and remove the pieces you
 don't need._
 
+**[VIEW LIVE DEMO](https://awsaistack.com)**
+
 This is an example project you can deploy immediately, without any additional
 configuration. Use this as a boilerplate project to get started with creating
 an AI Chat bot, authentication services, business logic, async workers, all on
