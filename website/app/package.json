@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "watch": "vite build --watch --outDir ../.serverless/build/app/build",
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview"
