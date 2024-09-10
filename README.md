@@ -124,6 +124,25 @@ with the service name.
 serverless auth deploy
 ```
 
+The `website` service is a static website that is served from an AWS Lambda
+function. As such, it can run locally without needing to use Dev Mode. However,
+it has a dependency on the AI Chat service and the Auth service, so you must
+configure environment variables locally.
+
+```
+# If you have the jq CLI command installed you can use that with the --json flag
+# on serverless info to get the URLs from the deployed services. If you do not
+# have jq installed, you can get the URLs by running "serverless auth info" and
+# "serverless ai-chat info" and copying the URLs manually into the environment
+# variables.
+export VITE_CHAT_API_URL=$(serverless aiChatApi info --json | jq -r '.outputs[] | select(.OutputKey == "ChatApiUrl") | .OutputValue')
+export VITE_AUTH_API_URL=$(serverless auth info --json | jq -r '.outputs[] | select(.OutputKey == "AuthApiUrl") | .OutputValue')
+
+# now you can run the local development server
+cd website/app
+npm run build
+```
+
 ## 4. Prepare & release to prod
 
 Now that the app is up and running in a development environment, lets get it
@@ -155,8 +174,10 @@ https://us-east-1.console.aws.amazon.com/acm/home?region=us-east-1#/certificates
 This example uses a Certificate with the following full qualified domain names:
 
 ```
+
 awsaistack.com
-*.awsaistack.com
+\*.awsaistack.com
+
 ```
 
 The base domain name, `awsaistack.com` is used for the website service
@@ -189,7 +210,9 @@ with a key like `/awsaistack/shared-token`, and set it in the
 `sharedTokenSecret` parameter in the `serverless-compose.yml` file:
 
 ```
+
 sharedTokenSecret: ${ssm:/awsaistack/shared-token}
+
 ```
 
 ### Deploy to prod
@@ -198,7 +221,9 @@ Once you've setup the custom domain name (optional), and created the secret, you
 are ready to deploy the service to prod.
 
 ```
+
 serverless deploy --stage prod
+
 ```
 
 Now you can use the service by visiting your domain name, or
