@@ -82,6 +82,10 @@ There is no cost to enable the models, but you must request access to use them.
 Upon request, it may take a few minutes for AWS to enable the model. Once they
 are enabled, you will receive an email from AWS confirming the model is enabled.
 
+Some users have reported issues with the enablement process, in which case, make
+sure you have sufficient permissions in AWS to enable the models, and you make
+need to contact AWS support for assistance.
+
 ## 3. Deploy & start developing
 
 Now you are ready to deploy the services. This will deploy all the services
@@ -191,8 +195,8 @@ to host the static website. The wildcard domain name,
 
 **Update serverless-compose.yml**
 
-- Update the `stages.default.customDomainName` to your custom domain name.
-- Update the `stages.default.customDomainCertificateARN` to the ARN of the
+- Update the `stages.prod.params.customDomainName` to your custom domain name.
+- Update the `stages.prod.params.customDomainCertificateARN` to the ARN of the
   certificate you created in ACM.
 
 ### Create the secret for JWT token authentication
@@ -211,12 +215,11 @@ Systems Manager Parameter Store.
 
 Generate a random secret and store it in the AWS Systems Manager Parameter Store
 with a key like `/serverless-ai-service/shared-token`, and set it in the
-`sharedTokenSecret` parameter in the `serverless-compose.yml` file:
+`stages.prod.params.sharedTokenSecret` parameter in the `serverless-compose.yml`
+file:
 
 ```
-
 sharedTokenSecret: ${ssm:/serverless-ai-service/shared-token}
-
 ```
 
 ### Deploy to prod
