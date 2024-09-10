@@ -1,7 +1,6 @@
 import { createContext, useContext } from 'react';
 
-const authApiUrl = 'https://q9x94od3v8.execute-api.us-east-1.amazonaws.com';
-//  import.meta.env.VITE_AUTH_API_URL;
+const authApiUrl = import.meta.env.VITE_AUTH_API_URL;
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
