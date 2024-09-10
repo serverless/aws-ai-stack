@@ -1,8 +1,8 @@
-import React, { useState, useRef } from "react";
-import ReactMarkdown from "react-markdown";
-import remarkGfm from "remark-gfm";
+import { useState, useRef, useEffect } from 'react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 
-import { useAuth } from "../auth/AuthProvider";
+import { useAuth } from '../auth/AuthProvider';
 
 const chatApiUrl = import.meta.env.VITE_CHAT_API_URL;
 
@@ -14,9 +14,9 @@ const FormattedText = ({ children }) => {
     <ReactMarkdown
       remarkPlugins={[remarkGfm]}
       components={{
-        li: ({ node, ...props }) => <li className="my-2" {...props} />,
+        li: ({ node, ...props }) => <li className='my-2' {...props} />,
         ol: ({ node, ...props }) => (
-          <ol className="list-disc my-4" {...props} />
+          <ol className='list-disc my-4' {...props} />
         ),
       }}
     >
@@ -36,12 +36,12 @@ const parseMultipleJsonObjects = (jsonString) => {
   const jsonObjects = [];
 
   for (let i = 0; i < jsonString.length; i++) {
-    if (jsonString[i] === "{") {
+    if (jsonString[i] === '{') {
       if (depth === 0) {
         startIndex = i;
       }
       depth++;
-    } else if (jsonString[i] === "}") {
+    } else if (jsonString[i] === '}') {
       depth--;
       if (depth === 0) {
         const jsonStr = jsonString.slice(startIndex, i + 1);
@@ -54,38 +54,48 @@ const parseMultipleJsonObjects = (jsonString) => {
 };
 
 const ChatPage = () => {
-  const [streamingResponse, setStreamingResponse] = useState("");
+  const [streamingResponse, setStreamingResponse] = useState('');
   const [messageHistory, setMessageHistory] = useState([]);
   const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(null);
   const [input, setInput] = useState(
-    "What makes the serverless framework so great?"
+    'What makes the serverless framework so great?',
   );
   const { getToken } = useAuth();
 
   const bottomRef = useRef(null);
+  const textareaRef = useRef(null);
+  // Disable sending when streaming response is in progress, when loading, or when input is empty
+  const disabled = !!streamingResponse || loading || input.trim() === '';
 
   /**
    * Scroll to the bottom of the chat window as new messages are streamed.
    */
   const scrollToBottom = () => {
-    bottomRef.current.scrollIntoView();
+    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
   const sendMessage = async () => {
+    setLoading(true);
+    // Prevent sending empty messages
+    if (!input) {
+      return;
+    }
     const userMessage = {
-      role: "user",
+      role: 'user',
       content: [{ text: input }],
     };
 
     setError();
+    // Add message to message history
     setMessageHistory((message) => message.concat(userMessage));
-    setInput("");
-
+    setInput('');
+    scrollToBottom();
     const response = await fetch(chatApiUrl, {
       headers: {
         Authorization: `Bearer ${getToken()}`,
       },
-      method: "POST",
+      method: 'POST',
       body: JSON.stringify([...messageHistory, userMessage]),
     });
 
@@ -93,7 +103,7 @@ const ChatPage = () => {
       .pipeThrough(new TextDecoderStream())
       .getReader();
 
-    let fullResponseMessage = "";
+    let fullResponseMessage = '';
     while (true) {
       const { value, done } = await reader.read();
       if (done) break;
@@ -102,6 +112,8 @@ const ChatPage = () => {
         for (const response of responseBlocks) {
           if (response.error) {
             setError(response.error);
+            setLoading(false);
+            scrollToBottom();
             return;
           }
           if (response.contentBlockDelta) {
@@ -109,64 +121,120 @@ const ChatPage = () => {
             fullResponseMessage = fullResponseMessage + responseText;
             setStreamingResponse((messages) => messages.concat(responseText));
             scrollToBottom();
+            setLoading(false);
           }
         }
       } catch (er) {
         console.error(er);
       }
+      scrollToBottom();
     }
 
     setMessageHistory((message) =>
       message.concat({
-        role: "assistant",
+        role: 'assistant',
         content: [{ text: fullResponseMessage }],
-      })
+      }),
     );
-    setStreamingResponse("");
+    setStreamingResponse('');
   };
+
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter' && !e.shiftKey && !disabled) {
+      e.preventDefault();
+      sendMessage();
+    }
+  };
+
+  useEffect(() => {
+    adjustTextareaHeight();
+  }, [input]);
+
+  const adjustTextareaHeight = () => {
+    const textarea = textareaRef.current;
+    if (textarea) {
+      textarea.style.height = 'auto';
+      const newHeight = Math.min(textarea.scrollHeight, 160); // 160px is equivalent to max-h-40
+      textarea.style.height = `${newHeight}px`;
+      textarea.style.overflowY = newHeight === 160 ? 'auto' : 'hidden';
+    }
+  };
+
+  const handleInputChange = (e) => {
+    setInput(e.target.value);
+    setError(''); // clear error message when user types
+  };
+
   return (
-    <div className="container mx-auto px-6 pt-2">
-      <div className="flex flex-col space-y-4 pb-10">
+    <div className='container mx-auto px-6 flex flex-col mt-20 flex-1 flex-grow'>
+      <div className='flex-1 flex flex-col space-y-4 bg-white'>
         {messageHistory.map((message) =>
           message.content.map((content, index) => {
-            const styles = ["p-1 px-4"];
-            if (message.role === "user") {
-              styles.push("bg-gray-200");
-              styles.push("rounded-full");
+            const styles = ['animate-fadeIn p-2 px-4  break-words'];
+            if (message.role === 'user') {
+              styles.push('bg-gray-100 rounded-xl self-end');
+            } else {
+              styles.push('text-gray-800 self-start ');
             }
             return (
-              <div className={styles.join(" ")} key={index}>
+              <div className={styles.join(' ')} key={index}>
                 <FormattedText>{content.text}</FormattedText>
               </div>
             );
-          })
+          }),
         )}
         {streamingResponse && (
-          <div className="animate-pulse p-1 px-4">
+          <div className=' p-2 px-4 text-gray-800 self-start'>
             <FormattedText>{streamingResponse}</FormattedText>
           </div>
         )}
-        {error && (
-          <div className="p-1 px-4 bg-red-200 rounded-full">
-            <FormattedText>{error}</FormattedText>
-          </div>
-        )}
-        <div ref={bottomRef} className="h-6"></div>
+
+        <div ref={bottomRef} className='h-10'></div>
       </div>
-      <div className="flex flex-row fixed bottom-0 left-0 w-full p-4 bg-white border-t-2 border-gray-200">
-        <input
-          type="text"
-          value={input}
-          className="grow shadow appearance-none border border-gray-300 rounded p-2 text-gray-700 mr-2 h-10 leading-tight px-3 rounded-full focus:outline-none focus:shadow-outline"
-          onChange={(e) => setInput(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && sendMessage()}
-        />
-        <button
-          className="shadow h-10 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-full"
-          onClick={sendMessage}
-        >
-          Send
-        </button>
+      <div className='flex flex-row sticky bottom-0 left-0 w-full p-4 bg-white'>
+        <div className='relative w-full'>
+          {error && (
+            <div className='animate-fadeIn p-2 px-4 w-full bg-primary text-white self-center rounded-md mb-2'>
+              <FormattedText>{error}</FormattedText>
+            </div>
+          )}
+          <textarea
+            ref={textareaRef}
+            value={input}
+            className='w-full pr-12 appearance-none border border-gray-300 rounded-md py-3 text-gray-700 leading-tight px-4 focus:outline-none focus:ring-2 focus:ring-primary resize-none  min-h-[2.5rem] max-h-40'
+            onChange={handleInputChange}
+            onKeyDown={handleKeyDown}
+            rows='1'
+          />
+          {loading && (
+            <div
+              className='animate-fadeIn absolute bottom-5 right-14 inline-block size-5 animate-spin rounded-full border-2 border-solid border-gray-300 border-e-transparent align-[-0.125em] text-surface motion-reduce:animate-[spin_1.5s_linear_infinite]'
+              role='status'
+            />
+          )}
+          <button
+            className='absolute right-2 bottom-3 flex justify-center items-center bg-primary text-white p-2 rounded-md hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-primary disabled:bg-gray-300'
+            onClick={sendMessage}
+            disabled={disabled}
+          >
+            <svg
+              xmlns='http://www.w3.org/2000/svg'
+              width='17'
+              height='17'
+              viewBox='0 0 24 24'
+              fill='none'
+              stroke='currentColor'
+              strokeWidth='2'
+              strokeLinecap='round'
+              strokeLinejoin='round'
+              className='lucide lucide-circle-arrow-up'
+            >
+              <circle cx='12' cy='12' r='10' />
+              <path d='m16 12-4-4-4 4' />
+              <path d='M12 16V8' />
+            </svg>
+          </button>
+        </div>
       </div>
     </div>
   );
