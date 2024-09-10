@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import remarkBreaks from 'remark-breaks';
 
 import { useAuth } from '../auth/AuthProvider';
 
@@ -12,7 +13,7 @@ const chatApiUrl = import.meta.env.VITE_CHAT_API_URL;
 const FormattedText = ({ children }) => {
   return (
     <ReactMarkdown
-      remarkPlugins={[remarkGfm]}
+      remarkPlugins={[remarkGfm, remarkBreaks]}
       components={{
         li: ({ node, ...props }) => <li className='my-2' {...props} />,
         ol: ({ node, ...props }) => (
@@ -61,6 +62,7 @@ const ChatPage = () => {
   const [input, setInput] = useState(
     'What makes the serverless framework so great?',
   );
+
   const { getToken } = useAuth();
 
   const bottomRef = useRef(null);

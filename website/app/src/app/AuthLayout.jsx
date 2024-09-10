@@ -32,11 +32,13 @@ const AuthLayout = () => {
       </div>
       <div className='animate-fadeIn flex flex-col items-center gap-2 text-center '>
         <span className='text-xs text-gray-800'>Powered By</span>
-        <img
-          src='https://s3.us-east-2.amazonaws.com/assets.public.serverless/general/framework-text-lighting-icon-center-black.svg'
-          alt='Serverless Framework'
-          className='h-8 p-0 m-0'
-        />
+        <a href='https://serverless.com/' target='_blank'>
+          <img
+            src='https://s3.us-east-2.amazonaws.com/assets.public.serverless/general/framework-text-lighting-icon-center-black.svg'
+            alt='Serverless Framework'
+            className='h-8 p-0 m-0'
+          />
+        </a>
       </div>
     </div>
   );
