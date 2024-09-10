@@ -171,6 +171,10 @@ verification, and may take a few minutes.
 
 https://us-east-1.console.aws.amazon.com/acm/home?region=us-east-1#/certificates/list
 
+After you have created the certificate, you must validate the certificate by
+following the instructions in the AWS Console. This may require adding a CNAME
+record to your DNS provider.
+
 This example uses a Certificate with the following full qualified domain names:
 
 ```
