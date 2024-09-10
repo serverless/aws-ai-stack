@@ -8,6 +8,8 @@ Use this as a boilerplate project to create an AI Chat bot, authentication servi
 
 This is a true serverless architecture, so you only pay for what you use, not for idle time. Some services, like DynamoDB, or AWS Bedrock trained models, may have additional storage costs.
 
+<img width="2000" alt="serverless-framework-v4-aws-ai-stack-screenshots" src="https://github.com/user-attachments/assets/fb25ed2d-6077-4a5f-94f2-121ba59213c6">
+
 # Features
 
 - **Full-Stack Application**
