@@ -1,48 +1,45 @@
 [![AWS AI Stack](https://github.com/user-attachments/assets/0550b6d6-5b97-4549-92a0-9c919d8e0b45)](https://awsaistack.com)
 
-_The AWS AI Stack is a robust Serverless Compose & Framework scaffolding project
-you can deploy immediately, pay only for what you use, and remove the pieces you
-don't need._
+**AWS AI Stack** – A ready-to-use, full-stack, boilerplate, using only AWS serverless services to deliver an LLM application powered by one or multiple models via AWS Bedrock (Claude 3.5 Sonnet, Llama3.1, Mistral Large 2, and many more).
 
-**[VIEW LIVE DEMO](https://awsaistack.com)**
+**[View the Live Demo – awsaistack.com](https://awsaistack.com)**
 
-This is an example project you can deploy immediately, without any additional
-configuration. Use this as a boilerplate project to get started with creating
-an AI Chat bot, authentication services, business logic, async workers, all on
-AWS Lambda, API Gateway, DynamoDB, and EventBridge.
+Use this as a boilerplate project to create an AI Chat bot, authentication services, business logic, async workers, all on AWS Lambda, API Gateway, DynamoDB, and EventBridge.
 
-This is a true serverless architecture, so you only pay for what you use. That
-is, you do not pay for idle. Some of the services, like DynamoDB, or AWS Bedrock
-trained models, may have additional storage costs.
+This is a true serverless architecture, so you only pay for what you use, not for idle time. Some services, like DynamoDB, or AWS Bedrock trained models, may have additional storage costs.
 
-This project is domain-oriented so you can easily remove the pieces you don't
-need, like AI Chat, authentication, etc.
+# Features
 
-Highlights of this project include:
-
-- **Custom AI Chat API & Website**
-  - Lambda function URLs
-  - Streaming responses
-  - Using AWS Bedrock Models
-- **Custom Domain Names with Lambda**
+- **Full-Stack Application**
+  - Backend: API (AWS API Gateway V2, AWS Lambda), Event-driven architecture (AWS Event-Bridge, AWS Lambda), Database (AWS DynamoDB), AI (AWS Bedrock)
+  - Frontend: Vanilla React app.
+- **AI Chat & Streaming Responses**
+  - Full serverless AI Chat architecture w/ streaming responses on AWS Lambda.
+- **Supports Multiple AI Models**
+  - Use one or multiple models via AWS Bedrock: Claude 3.5 Sonnet, Llama3.1, Mistral Large 2, and many more.
+- **100% Serverless**
+  - This is a true serverless architecture. It auto-scales and you only pay when users use it. Some services may have additional storage costs.
+- **Custom Domain Names**
   - Custom domain names for API Gateway services using the `serverless-domain-manager` plugin
   - Custom domain names for Lambda services using CloudFront Distributions
-- **Authentication with JWT Tokens**
+- **API & Event-Driven**
+  - Express.js API placeholder service for your business logic
+  - Shared EventBridge to public & subscribe to events
+  - Worker service to process events from EventBridge
+- **Built-In Authentication**
   - API Gateway authorizer
   - Login & Registration API on Lambda with Express.js
   - DynamoDB table to store user information
   - Shared library to provide JWT token authentication
   - Frontend website that uses login & registration API
-- **Business API & Worker**
-  - Express.js API placeholder service for your business logic
-  - Shared EventBridge to public & subscribe to events
-  - Worker service to process events from EventBridge
-- **Serverless Compose**
-  - Shared configuration for all services
-  - Stages & Params for different environments
+- **Multi-Environment**
+  - Shared configuration for all services.
+  - Separated configuration for different environments.
+- **Domain Oriented Architecture**
+  - This project is domain-oriented so you can easily remove the pieces you don't need, like AI Chat, authentication, etc.
 - **CI/CD with Github Action**
-  - Github Actions to deploy the services to prod
-  - Github Actions to deploy PRs & remove services after merge
+  - Github Actions to deploy the services to prod.
+  - Github Actions to deploy PRs & remove services after merge.
 
 # Getting Started
 
