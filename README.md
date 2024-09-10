@@ -206,12 +206,12 @@ The `prod` stage uses the `${ssm}` parameter to retrieve the secret from AWS
 Systems Manager Parameter Store.
 
 Generate a random secret and store it in the AWS Systems Manager Parameter Store
-with a key like `/awsaistack/shared-token`, and set it in the
+with a key like `/serverless-ai-service/shared-token`, and set it in the
 `sharedTokenSecret` parameter in the `serverless-compose.yml` file:
 
 ```
 
-sharedTokenSecret: ${ssm:/awsaistack/shared-token}
+sharedTokenSecret: ${ssm:/serverless-ai-service/shared-token}
 
 ```
 
