@@ -83,9 +83,10 @@ There is no cost to enable the models, but you must request access to use them.
 Upon request, it may take a few minutes for AWS to enable the model. Once they
 are enabled, you will receive an email from AWS confirming the model is enabled.
 
-Some users have reported issues with the enablement process, in which case, make
-sure you have sufficient permissions in AWS to enable the models, and you make
-need to contact AWS support for assistance.
+Some users have reported issues with getting models enabled on AWS Bedrock. Make
+sure you have sufficient permissions in AWS to enable the models first. Often, 
+AWS accounts that are new or have not historically had a monthly invoice over a few
+dollars may require contacting AWS to enable models.
 
 ## 3. Deploy & start developing
 
