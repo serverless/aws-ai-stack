@@ -1,6 +1,7 @@
 [![AWS AI Stack](https://github.com/user-attachments/assets/0550b6d6-5b97-4549-92a0-9c919d8e0b45)](https://awsaistack.com)
 
-**AWS AI Stack** – A ready-to-use, full-stack, boilerplate, using only AWS serverless services to deliver an LLM application powered by one or multiple models via AWS Bedrock (Claude 3.5 Sonnet, Llama3.1, Mistral Large 2, and many more).
+**AWS AI Stack** – A ready-to-use, full-stack boilerplate project for building serverless AI applications on AWS. A great fit for those seeking a trusted AWS foundation for AI apps and access to powerful LLM models via Bedrock ​​that keep your app’s data separate from model providers.
+
 
 **[View the Live Demo – awsaistack.com](https://awsaistack.com)**
 
