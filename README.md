@@ -18,8 +18,9 @@ This is a true serverless architecture, so you only pay for what you use, not fo
   - Frontend: Vanilla React app.
 - **AI Chat & Streaming Responses**
   - Full serverless AI Chat architecture w/ streaming responses on AWS Lambda.
-- **Supports Multiple AI Models**
+- **Multiple AI Models & Data Privacy**
   - Use one or multiple models via AWS Bedrock: Claude 3.5 Sonnet, Llama3.1, Mistral Large 2, and many more.
+  - App data never leaves AWS and is not sent to model providers.
 - **100% Serverless**
   - This is a true serverless architecture. It auto-scales and you only pay when users use it. Some services may have additional storage costs.
 - **Custom Domain Names**
