@@ -6,8 +6,8 @@ stages:
       modelId: meta.llama3-70b-instruct-v1:0
       customDomainNameChatApi: chat.${param:customDomainName}
       dynamoDbUsageTableName: ${self:service}-usage-table-${sls:stage}
-      throttleMonthlyLimitUser: 10
-      throttleMonthlyLimitGlobal: 100
+      throttleMonthlyLimitUser: 20
+      throttleMonthlyLimitGlobal: 2000
 
 provider:
   name: aws
