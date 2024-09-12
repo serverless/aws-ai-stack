@@ -470,7 +470,7 @@ In this configuration, the Auth and Business APIs use the paths `/auth` and
 Name Path Mapping was used in the Custom Domain Name support in API Gateway
 to use the same domain name but shared across multiple API Gateway instances.
 
-Alternatively, you you can use a single API Gateway and map the paths to the
+Alternatively, you can use a single API Gateway and map the paths to the
 respective services. This would allow you to use the same domain name for
 multiple services, and would also allow you to use the same authorizer for
 all the services. However, sharing an API Gateway instance may have performance
