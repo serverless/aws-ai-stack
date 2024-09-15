@@ -7,7 +7,7 @@ stages:
       customDomainNameChatApi: chat.${param:customDomainName}
       dynamoDbUsageTableName: ${self:service}-usage-table-${sls:stage}
       throttleMonthlyLimitUser: 20
-      throttleMonthlyLimitGlobal: 2000
+      throttleMonthlyLimitGlobal: 4000
 
 provider:
   name: aws
