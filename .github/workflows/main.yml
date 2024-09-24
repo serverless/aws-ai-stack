@@ -1,20 +1,13 @@
 name: Deploy main branch
 
 on:
-  push:
-    branches:
-      - main
   pull_request:
     branches:
       - main
-  pull_request_target:
-    types:
-      - closed
 
 jobs:
   deploy:
     name: deploy
-    if: github.event_name != 'pull_request_target' || github.event.pull_request.merged != true
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -35,14 +28,13 @@ jobs:
       - name: Serverless Deploy
         uses: serverless/github-action@v4
         with:
-          args: deploy --stage ${{ github.event.pull_request.number && 'pr-${{ github.event.pull_request.number }}' || 'prod' }}
+          args: deploy --stage pr-${{ github.event.pull_request.number }}
         env:
           SERVERLESS_LICENSE_KEY: ${{ secrets.SERVERLESS_LICENSE_KEY }}
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
   remove:
     name: remove
-    if: github.event.pull_request.merged == true
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

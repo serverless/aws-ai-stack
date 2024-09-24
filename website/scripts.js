@@ -1,8 +1,11 @@
 import { execSync } from "child_process";
 
 class Scripts {
-  constructor(serverless) {
+  constructor(serverless, options, utils) {
     this.serverless = serverless;
+    this.options = options;
+    this.utils = utils;
+
     this.commands = {};
     this.hooks = {};
 
@@ -53,7 +56,13 @@ class Scripts {
   }
 
   execute(command) {
-    execSync(command, { stdio: ["ignore", "ignore", "inherit"] });
+    let stdio = ["ignore", "ignore", "inherit"];
+
+    if (this.options.verbose || this.options.debug) {
+      stdio = "inherit";
+    }
+
+    execSync(command, { stdio });
   }
 }
 
