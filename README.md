@@ -2,7 +2,6 @@
 
 **AWS AI Stack** – A ready-to-use, full-stack boilerplate project for building serverless AI applications on AWS. A great fit for those seeking a trusted AWS foundation for AI apps and access to powerful LLM models via Bedrock ​​that keep your app’s data separate from model providers.
 
-
 **[View the Live Demo – awsaistack.com](https://awsaistack.com)**
 
 Use this as a boilerplate project to create an AI Chat bot, authentication services, business logic, async workers, all on AWS Lambda, API Gateway, DynamoDB, and EventBridge.
@@ -84,7 +83,7 @@ Upon request, it may take a few minutes for AWS to enable the model. Once they
 are enabled, you will receive an email from AWS confirming the model is enabled.
 
 Some users have reported issues with getting models enabled on AWS Bedrock. Make
-sure you have sufficient permissions in AWS to enable the models first. Often, 
+sure you have sufficient permissions in AWS to enable the models first. Often,
 AWS accounts that are new or have not historically had a monthly invoice over a few
 dollars may require contacting AWS to enable models.
 
@@ -519,5 +518,3 @@ necessary.
 Consider using a more fine-grained approach to deploying services, such as
 only deploying the services that have changed by using the `serverless <service>
 deploy` command.
-
-##
