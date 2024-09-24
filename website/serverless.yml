@@ -5,8 +5,8 @@ provider:
   runtime: nodejs20.x
 
 plugins:
-  - serverless-plugin-scripts
   - serverless-domain-manager
+  - ./scripts
 
 build:
   esbuild: true
