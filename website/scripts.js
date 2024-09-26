@@ -1,10 +1,20 @@
 import { execSync } from "child_process";
 
+/**
+ * This is a custom Serverless Framework Plugin that allows you to
+ * define and run custom scripts in your serverless.yml file, similar to npm scripts.
+ * For more information on creating custom plugins, see the documentation:
+ * https://www.serverless.com/framework/docs/guides/plugins/creating-plugins
+ *
+ * In this AI example, we need to run vite build script before deploying the website service.
+ * So we built this quick plugin, and loaded it in the serverless.yml file.
+ */
+
 class Scripts {
   constructor(serverless, options, utils) {
     this.serverless = serverless;
-    this.options = options;
-    this.utils = utils;
+    this.options = options; // CLI options are passed to the plugin
+    this.utils = utils; // Helper logging functions are passed to the plugin
 
     this.commands = {};
     this.hooks = {};
@@ -56,12 +66,16 @@ class Scripts {
   }
 
   execute(command) {
+    // By default, only show stderr in the terminal
+    // So that you can see any build errors that may occur
     let stdio = ["ignore", "ignore", "inherit"];
 
+    // But in verbose or debug mode, we show all output
     if (this.options.verbose || this.options.debug) {
       stdio = "inherit";
     }
 
+    // Execute the command/script in a child service
     execSync(command, { stdio });
   }
 }
