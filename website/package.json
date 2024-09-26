@@ -2,13 +2,13 @@
   "name": "website",
   "version": "1.0.0",
   "main": "index.js",
+  "type": "module",
   "license": "MIT",
   "dependencies": {
     "express": "^4.19.2",
     "serverless-http": "^3.2.0"
   },
   "devDependencies": {
-    "serverless-domain-manager": "^7.4.0",
-    "serverless-plugin-scripts": "^1.0.2"
+    "serverless-domain-manager": "^7.4.0"
   }
 }
