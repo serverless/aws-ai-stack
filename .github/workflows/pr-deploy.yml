@@ -18,11 +18,14 @@ jobs:
           cache: "npm"
       - name: Install dependencies
         run: npm ci
-      - name: serverless deploy
+      - name: Configure AWS Credentials - Serverless Marketing AWS Account
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          role-to-assume: arn:aws:iam::488110005556:role/GithubActionsDeploymentRole
+          aws-region: us-east-1
+      - name: Serverless Deploy - PR Preview
         uses: serverless/github-action@v4
         with:
           args: deploy --stage pr-${{ github.event.pull_request.number }}
         env:
           SERVERLESS_LICENSE_KEY: ${{ secrets.SERVERLESS_LICENSE_KEY }}
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
