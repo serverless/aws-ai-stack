@@ -24,7 +24,7 @@ jobs:
       - name: Install dependencies
         run: npm ci
       - name: Configure AWS Credentials - Serverless Marketing AWS Account
-        uses: aws-actions/configure-aws-credentials@v2
+        uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: arn:aws:iam::488110005556:role/GithubActionsDeploymentRole
           aws-region: us-east-1

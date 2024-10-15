@@ -30,7 +30,7 @@ jobs:
             yq -i '.stages.prod.params.customDomainName = "${{ vars.CUSTOM_DOMAIN_NAME }}"' serverless-compose.yml
             yq -i '.stages.prod.params.customDomainCertificateARN = "${{ vars.CUSTOM_DOMAIN_CERTIFICATE_ARN }}"' serverless-compose.yml
       - name: Configure AWS Credentials - Serverless Marketing AWS Account
-        uses: aws-actions/configure-aws-credentials@v2
+        uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: arn:aws:iam::488110005556:role/GithubActionsDeploymentRole
           aws-region: us-east-1
