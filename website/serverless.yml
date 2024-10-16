@@ -5,8 +5,8 @@ provider:
   runtime: nodejs20.x
 
 plugins:
-  - serverless-plugin-scripts
-  - serverless-domain-manager
+  - serverless-domain-manager # Load the community plugin for custom domains installed with npm
+  - ./scripts # Load our custom scripts plugin
 
 build:
   esbuild: true
@@ -25,6 +25,8 @@ custom:
     apiType: http
     autoDomain: true
     enabled: ${param:customDomainNameEnabled}
+
+  # This property is expected by our custom scripts plugin.
   scripts:
     hooks:
       # This hook builds the React App. It sets the environment variables for
