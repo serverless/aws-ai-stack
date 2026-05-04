@@ -42,4 +42,4 @@ app.use((err, req, res, next) => {
   }
 });
 
-export const handler = serverless(app);
+export const handler = serverless(app, { basePath: '/business' });

@@ -256,4 +256,4 @@ app.use((req, res, next) => {
   });
 });
 
-export const handler = serverless(app);
+export const handler = serverless(app, { basePath: process.env.PREFIX_PATH || '/auth' });

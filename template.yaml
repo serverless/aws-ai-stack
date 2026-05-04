@@ -1,0 +1,214 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: AWS AI Stack deployed via AWS SAM (No Serverless Framework Required)
+
+Globals:
+  Function:
+    Timeout: 30
+    Runtime: nodejs20.x
+    Architectures:
+      - x86_64
+
+Parameters:
+  SharedTokenSecret:
+    Type: String
+    Default: "DEFAULT"
+  ModelId:
+    Type: String
+    Default: "meta.llama3-70b-instruct-v1:0"
+
+Resources:
+  # ==========================================
+  # 1. Event Bus
+  # ==========================================
+  EventBus:
+    Type: AWS::Events::EventBus
+    Properties:
+      Name: !Sub "${AWS::StackName}-event-bus"
+
+  # ==========================================
+  # 2. Auth Service
+  # ==========================================
+  DynamoDbUserTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      AttributeDefinitions:
+        - AttributeName: userId
+          AttributeType: S
+        - AttributeName: email
+          AttributeType: S
+      KeySchema:
+        - AttributeName: userId
+          KeyType: HASH
+      BillingMode: PAY_PER_REQUEST
+      GlobalSecondaryIndexes:
+        - IndexName: emailIndex
+          KeySchema:
+            - AttributeName: email
+              KeyType: HASH
+          Projection:
+            ProjectionType: ALL
+
+  AuthApiFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: .
+      Handler: auth/src/handler.handler
+      Environment:
+        Variables:
+          USERS_TABLE_NAME: !Ref DynamoDbUserTable
+          EVENT_BUS_NAME: !Ref EventBus
+          PREFIX_PATH: /auth
+          SHARED_TOKEN_SECRET: !Ref SharedTokenSecret
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref DynamoDbUserTable
+        - EventBridgePutEventsPolicy:
+            EventBusName: !Ref EventBus
+      Events:
+        ApiEvent:
+          Type: HttpApi
+          Properties:
+            Path: /auth/{proxy+}
+            Method: ANY
+    Metadata:
+      BuildMethod: esbuild
+      BuildProperties:
+        Minify: true
+        Target: "es2020"
+        EntryPoints: 
+          - auth/src/handler.js
+
+  # ==========================================
+  # 3. AI Chat API
+  # ==========================================
+  DynamoDbUsageTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      AttributeDefinitions:
+        - AttributeName: PK
+          AttributeType: S
+        - AttributeName: SK
+          AttributeType: S
+      KeySchema:
+        - AttributeName: PK
+          KeyType: HASH
+        - AttributeName: SK
+          KeyType: RANGE
+      BillingMode: PAY_PER_REQUEST
+
+  AiChatApiFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: .
+      Handler: ai-chat-api/handler.handler
+      Timeout: 60
+      Environment:
+        Variables:
+          MODEL_ID: !Ref ModelId
+          SHARED_TOKEN_SECRET: !Ref SharedTokenSecret
+          USAGE_TABLE_NAME: !Ref DynamoDbUsageTable
+          THROTTLE_MONTHLY_LIMIT_USER: "20"
+          THROTTLE_MONTHLY_LIMIT_GLOBAL: "4000"
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref DynamoDbUsageTable
+        - Statement:
+            - Effect: Allow
+              Action: bedrock:InvokeModelWithResponseStream
+              Resource: !Sub "arn:aws:bedrock:${AWS::Region}::foundation-model/${ModelId}"
+      FunctionUrlConfig:
+        AuthType: NONE
+        Cors:
+          AllowOrigins:
+            - "*"
+          AllowHeaders:
+            - "*"
+          AllowMethods:
+            - "*"
+        InvokeMode: RESPONSE_STREAM
+    Metadata:
+      BuildMethod: esbuild
+      BuildProperties:
+        Minify: true
+        Target: "es2020"
+        EntryPoints: 
+          - ai-chat-api/handler.js
+
+  # ==========================================
+  # 4. Business API
+  # ==========================================
+  BusinessApiFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: .
+      Handler: business-api/handler.handler
+      Environment:
+        Variables:
+          SHARED_TOKEN_SECRET: !Ref SharedTokenSecret
+      Events:
+        ApiEvent:
+          Type: HttpApi
+          Properties:
+            Path: /business/{proxy+}
+            Method: ANY
+    Metadata:
+      BuildMethod: esbuild
+      BuildProperties:
+        Minify: true
+        Target: "es2020"
+        EntryPoints: 
+          - business-api/handler.js
+
+  # ==========================================
+  # 5. Business Worker
+  # ==========================================
+  BusinessWorkerFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: .
+      Handler: business-worker/handler.handler
+      Events:
+        AuthRegisterEvent:
+          Type: EventBridgeRule
+          Properties:
+            EventBusName: !Ref EventBus
+            Pattern:
+              source:
+                - auth.register
+    Metadata:
+      BuildMethod: esbuild
+      BuildProperties:
+        Minify: true
+        Target: "es2020"
+        EntryPoints: 
+          - business-worker/handler.js
+
+  # ==========================================
+  # 6. Website (Frontend)
+  # ==========================================
+  WebsiteFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: website/
+      Handler: index.handler
+      Events:
+        ApiEvent:
+          Type: HttpApi
+          Properties:
+            Path: /{proxy+}
+            Method: ANY
+
+Outputs:
+  WebsiteUrl:
+    Description: "API Gateway URL for Website (Frontend)"
+    Value: !Sub "https://${ServerlessHttpApi}.execute-api.${AWS::Region}.amazonaws.com/"
+  AuthApiUrl:
+    Description: "API Gateway URL for Auth API"
+    Value: !Sub "https://${ServerlessHttpApi}.execute-api.${AWS::Region}.amazonaws.com/auth"
+  BusinessApiUrl:
+    Description: "API Gateway URL for Business API"
+    Value: !Sub "https://${ServerlessHttpApi}.execute-api.${AWS::Region}.amazonaws.com/business"
+  ChatApiUrl:
+    Description: "Lambda Function URL for Chat API"
+    Value: !GetAtt AiChatApiFunctionUrl.FunctionUrl
